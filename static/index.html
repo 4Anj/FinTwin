@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Digital Twin</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-line text-white text-2xl mr-3"></i>
+                    <h1 class="text-white text-xl font-bold">Financial Digital Twin</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="profileBtn" class="text-white hover:text-gray-200">
+                        <i class="fas fa-user-circle text-xl"></i>
+                    </button>
+                    <button id="settingsBtn" class="text-white hover:text-gray-200">
+                        <i class="fas fa-cog text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- User Profile Section -->
+        <div id="profileSection" class="hidden mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">User Profile</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                        <input type="text" id="userName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="userEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button id="saveProfileBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                        Save Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settingsSection" class="hidden mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Settings</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="useYFinance" class="mr-3" checked>
+                        <label for="useYFinance" class="text-sm font-medium text-gray-700">Use Real-time Yahoo Finance Data</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="realTimeMode" class="mr-3">
+                        <label for="realTimeMode" class="text-sm font-medium text-gray-700">Real-time Mode (Faster Results)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Form -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Financial Planning Input</h2>
+            <form id="simulationForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Annual Income ($)</label>
+                        <input type="number" id="currentIncome" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Target Investment Amount ($)</label>
+                        <input type="number" id="targetAmount" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Investment Tenure (Years)</label>
+                        <input type="number" id="tenure" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" max="50" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Initial Investment ($)</label>
+                        <input type="number" id="initialInvestment" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Risk Appetite</label>
+                        <select id="riskAppetite" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="low">Low Risk</option>
+                            <option value="medium" selected>Medium Risk</option>
+                            <option value="high">High Risk</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Investment Strategy</label>
+                        <div class="space-y-4">
+                            <div class="flex space-x-4">
+                                <button id="basicStrategyBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 active">
+                                    Basic (Selected Instruments)
+                                </button>
+                                <button id="diversifiedStrategyBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                                    Diversified (All Asset Classes)
+                                </button>
+                            </div>
+                            
+                            <!-- Basic Strategy Section -->
+                            <div id="basicStrategySection">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Financial Instruments</label>
+                                <div class="relative">
+                                    <input type="text" id="symbolSearch" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search and add instruments (e.g., SPY, AAPL, TSLA)">
+                                    <div id="symbolDropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto">
+                                        <!-- Dropdown options will be populated here -->
+                                    </div>
+                                </div>
+                                <div id="selectedInstruments" class="mt-2 flex flex-wrap gap-2">
+                                    <!-- Selected instruments will be displayed here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Diversified Strategy Section -->
+                            <div id="diversifiedStrategySection" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Asset Class Preferences</label>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="includeStocks" class="mr-2" checked>
+                                            <span class="text-sm">Stocks</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="includeBonds" class="mr-2" checked>
+                                            <span class="text-sm">Bonds</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="includeRealEstate" class="mr-2" checked>
+                                            <span class="text-sm">Real Estate</span>
+                                        </label>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="includeCommodities" class="mr-2" checked>
+                                            <span class="text-sm">Commodities</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="includeCrypto" class="mr-2">
+                                            <span class="text-sm">Cryptocurrency</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="includeAlternatives" class="mr-2">
+                                            <span class="text-sm">Alternatives</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <button type="submit" id="runSimulationBtn" class="bg-blue-600 text-white px-8 py-3 rounded-md hover:bg-blue-700 font-medium">
+                        <i class="fas fa-play mr-2"></i>Run Simulation
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden text-center py-8">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600">Running Monte Carlo simulation...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <!-- Market Overview -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Market Overview</h2>
+                <div id="marketOverview" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Market data will be populated here -->
+                </div>
+            </div>
+
+            <!-- Portfolio Performance Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Portfolio Performance Simulation</h2>
+                <div class="h-96">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Risk Analysis Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Risk Analysis</h2>
+                <div class="h-96">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+
+            <!-- AI Insights -->
+            <div id="aiInsightsSection" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">AI Financial Insights</h2>
+                <div id="aiInsightsContainer">
+                    <!-- AI insights will be populated here -->
+                </div>
+            </div>
+
+            <!-- Investment Strategies -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Recommended Investment Strategies</h2>
+                <div id="strategiesContainer" class="space-y-6">
+                    <!-- Strategies will be populated here -->
+                </div>
+            </div>
+
+            <!-- Blockchain Integrity -->
+            <div id="integritySection" class="bg-white rounded-lg shadow-lg p-6 mb-8 hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">🔒 Blockchain Integrity Verification</h2>
+                <div id="integrityContainer">
+                    <!-- Integrity information will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/app.js"></script>
+</body>
+</html>
